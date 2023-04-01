@@ -1,21 +1,21 @@
-import * as React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import {Text, View, Button} from 'react-native';
+import * as React from 'react';
+import { Button, Text, View } from 'react-native';
 
 type RootStackParamList = {
   Home: undefined;
-  Details: {itemId: number; otherParam?: string};
+  Details: { itemId: number; otherParam?: string };
 };
 type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
 type DetailsScreenProps = NativeStackScreenProps<RootStackParamList, 'Details'>;
 
-function HomeScreen({navigation}: HomeScreenProps) {
+function HomeScreen({ navigation }: HomeScreenProps) {
   return (
-    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Text>Home Screen</Text>
       <Button
         title="Go to Details"
@@ -31,11 +31,11 @@ function HomeScreen({navigation}: HomeScreenProps) {
   );
 }
 
-function DetailsScreen({route, navigation}: DetailsScreenProps) {
+function DetailsScreen({ route, navigation }: DetailsScreenProps) {
   /* 2. Get the param */
-  const {itemId, otherParam} = route.params;
+  const { itemId, otherParam } = route.params;
   return (
-    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Text>Details Screen</Text>
       <Text>itemId: {JSON.stringify(itemId)}</Text>
       <Text>otherParam: {JSON.stringify(otherParam)}</Text>
@@ -53,7 +53,8 @@ function DetailsScreen({route, navigation}: DetailsScreenProps) {
   );
 }
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
 function App() {
   return (
     <NavigationContainer>
@@ -61,9 +62,9 @@ function App() {
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{title: '제목'}}
+          options={{ title: '제목' }}
         />
-        <Stack.Screen name="Details" component={DetailsScreen} />
+        <Stack.Screen name="Details" component={DetailsScreen!} />
         {/*<Stack.Screen name="Details">*/}
         {/*  {props => <DetailsScreen {...props} />}*/}
         {/*</Stack.Screen>*/}
