@@ -3,6 +3,7 @@ import Config from 'react-native-config';
 import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | undefined;
+
 const useSocket = (): [Socket | undefined, () => void] => {
   const disconnect = useCallback(() => {
     if (socket) {
@@ -10,6 +11,7 @@ const useSocket = (): [Socket | undefined, () => void] => {
       socket = undefined;
     }
   }, []);
+
   if (!socket) {
     socket = io(`${Config.API_URL}`, {
       transports: ['websocket'],
