@@ -45,6 +45,7 @@ const SignUpPage = ({
 
       console.log(response);
       Alert.alert('알림', '회원가입 완료');
+      setLoading(false);
       navigation.navigate('SignIn');
     } catch (error) {
       console.log(error);
@@ -54,7 +55,6 @@ const SignUpPage = ({
           error.response?.data.message ?? '알수없는 에러가 발생했습니다',
         );
       }
-    } finally {
       setLoading(false);
     }
   }, [email, name, loading, password, navigation]);

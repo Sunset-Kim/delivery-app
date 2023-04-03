@@ -51,8 +51,8 @@ const SignInPage = ({
         accessToken,
         refreshToken,
       } = response.data.data;
+      setLoading(false);
 
-      console.log(response);
       dispatch(
         userSlice.actions.setUser({
           name,
@@ -66,7 +66,6 @@ const SignInPage = ({
       if (error instanceof AxiosError) {
         Alert.alert('로그인', error.response?.data.message ?? '알수없는 에러');
       }
-    } finally {
       setLoading(false);
     }
   }, [email, password, loading, dispatch]);
