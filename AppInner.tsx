@@ -8,6 +8,7 @@ import Config from 'react-native-config';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { useSelector } from 'react-redux';
 import { LoggedInParamList, RootStackParamList } from './App';
+import { CONFIG } from './src/feature/common/config';
 import useSocket from './src/feature/socket/hooks/use-socket';
 import DeliveryPage from './src/pages/Delivery.page';
 import OrdersPage from './src/pages/Orders.page';
@@ -16,6 +17,7 @@ import SignInPage from './src/pages/SignIn.page';
 import SignUpPage from './src/pages/SignUp.page';
 import { useAppDispatch } from './src/store';
 import { RootState } from './src/store/reducers';
+import { orderSlice } from './src/store/slices';
 import { userSlice } from './src/store/slices/user.slice';
 
 const Tab = createBottomTabNavigator<LoggedInParamList>();
@@ -40,14 +42,20 @@ const TabScreens: {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppInner = () => {
+  const a = Config.API_URL;
+  console.log(a);
   const isLoggedIn = useSelector<RootState>(state => !!state.user.email);
   const dispatch = useAppDispatch();
 
   const [socket, disconnect] = useSocket();
 
-  const logCallback = useCallback((data: any) => {
-    console.log(data);
-  }, []);
+  const setOrder = useCallback(
+    (data: any) => {
+      console.log(data);
+      dispatch(orderSlice.actions.addOrder(data));
+    },
+    [dispatch],
+  );
 
   useEffect(() => {
     getTokenAndRefresh();
@@ -60,7 +68,7 @@ const AppInner = () => {
         }
 
         const { data } = await axios.post(
-          `${Config.API_URL}/refreshToken`,
+          `${CONFIG.API_URL}/refreshToken`,
           {},
           {
             headers: {
@@ -88,14 +96,14 @@ const AppInner = () => {
     if (socket && isLoggedIn) {
       console.log('socket start');
       socket.emit('acceptOrder', 'hello');
-      socket.on('order', logCallback);
+      socket.on('order', setOrder);
     }
     return () => {
       if (socket) {
-        socket.off('hello', logCallback);
+        socket.off('hello', setOrder);
       }
     };
-  }, [disconnect, socket, logCallback, isLoggedIn]);
+  }, [disconnect, socket, setOrder, isLoggedIn]);
 
   useEffect(() => {
     if (!isLoggedIn) {
