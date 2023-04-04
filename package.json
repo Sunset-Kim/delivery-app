@@ -21,6 +21,7 @@
     "react-native-config": "^1.5.0",
     "react-native-encrypted-storage": "^4.0.3",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
+    "react-native-nmap": "^0.0.66",
     "react-native-safe-area-context": "^3.4.1",
     "react-native-screens": "^3.20.0",
     "react-redux": "^8.0.5",
