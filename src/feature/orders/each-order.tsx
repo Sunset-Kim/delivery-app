@@ -1,7 +1,16 @@
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import React, { useCallback, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Dimensions,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+
+import NaverMapView, { Marker, Path } from 'react-native-nmap';
 import { useSelector } from 'react-redux';
 import { LoggedInParamList } from '../../../App';
 import { useAppDispatch } from '../../store';
@@ -73,6 +82,45 @@ export const EachOrder: React.FC<EachOrderProps> = ({ order }) => {
       </Pressable>
       {isOpen && (
         <View style={styles.buttonGroup}>
+          <View
+            style={{
+              width: Dimensions.get('window').width - 30,
+              height: 200,
+              marginTop: 10,
+            }}>
+            <NaverMapView
+              style={{ width: '100%', height: '100%' }}
+              zoomControl={false}
+              center={{
+                zoom: 10,
+                tilt: 50,
+                latitude: (start.latitude + end.latitude) / 2,
+                longitude: (start.longitude + end.longitude) / 2,
+              }}>
+              <Marker
+                coordinate={{
+                  latitude: start.latitude,
+                  longitude: start.longitude,
+                }}
+                pinColor="blue"
+              />
+              <Path
+                coordinates={[
+                  {
+                    latitude: start.latitude,
+                    longitude: start.longitude,
+                  },
+                  { latitude: end.latitude, longitude: end.longitude },
+                ]}
+              />
+              <Marker
+                coordinate={{
+                  latitude: end.latitude,
+                  longitude: end.longitude,
+                }}
+              />
+            </NaverMapView>
+          </View>
           <Pressable
             style={[styles.acceptButton]}
             onPress={() => onAccept(orderId)}>
