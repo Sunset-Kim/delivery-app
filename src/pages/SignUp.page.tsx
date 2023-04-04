@@ -11,8 +11,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import Config from 'react-native-config';
 import { RootStackParamList } from '../../App';
+import { CONFIG } from '../feature/common/config';
 import { DismissKeyBoardView } from '../feature/ui/dismiss-keyboard';
 import { useInput } from '../feature/ui/hooks';
 import { TextField } from '../feature/ui/text-field';
@@ -37,13 +37,13 @@ const SignUpPage = ({
     if (loading) return;
     try {
       setLoading(true);
-      const response = await axios.post(`${Config.API_URL}/user`, {
+      console.log('user');
+      const response = await axios.post(`${CONFIG.API_URL}/user`, {
         email,
         name,
         password,
       });
 
-      console.log(response);
       Alert.alert('알림', '회원가입 완료');
       setLoading(false);
       navigation.navigate('SignIn');
