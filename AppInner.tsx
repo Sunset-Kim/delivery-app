@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import axios, { AxiosError } from 'axios';
 import React, { useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
-import Config from 'react-native-config';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { useSelector } from 'react-redux';
 import { LoggedInParamList, RootStackParamList } from './App';
@@ -42,8 +41,6 @@ const TabScreens: {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppInner = () => {
-  const a = Config.API_URL;
-  console.log(a);
   const isLoggedIn = useSelector<RootState>(state => !!state.user.email);
   const dispatch = useAppDispatch();
 
@@ -56,6 +53,47 @@ const AppInner = () => {
     },
     [dispatch],
   );
+
+  useEffect(() => {
+    axios.interceptors.response.use(
+      response => response,
+      async error => {
+        if (axios.isAxiosError(error)) {
+          if (error.config?.url === `${CONFIG.API_URL}/refreshToken`) {
+            return Promise.reject(error);
+          }
+
+          if (error.status === 419) {
+            if (error.response?.data.code === 'expired') {
+              const refreshToken = await EncryptedStorage.getItem(
+                'refreshToken',
+              );
+
+              const response = await axios.post(
+                `${CONFIG.API_URL}/refreshToken`,
+                {},
+                {
+                  headers: {
+                    Authorization: `Bearer ${refreshToken}`,
+                  },
+                },
+              );
+
+              const accessToken = response.data.data.accessToken;
+              dispatch(userSlice.actions.setAccessToken(accessToken));
+
+              const originalRequest = error.config;
+              originalRequest!.headers.Authorization = `Bearer ${accessToken}`;
+
+              return axios(originalRequest!);
+            }
+          }
+        }
+
+        return Promise.reject(error);
+      },
+    );
+  }, []);
 
   useEffect(() => {
     getTokenAndRefresh();
