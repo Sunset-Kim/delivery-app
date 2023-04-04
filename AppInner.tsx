@@ -4,10 +4,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import axios, { AxiosError } from 'axios';
 import React, { useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
-import Config from 'react-native-config';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { useSelector } from 'react-redux';
 import { LoggedInParamList, RootStackParamList } from './App';
+import { CONFIG } from './src/feature/common/config';
 import useSocket from './src/feature/socket/hooks/use-socket';
 import DeliveryPage from './src/pages/Delivery.page';
 import OrdersPage from './src/pages/Orders.page';
@@ -16,6 +16,7 @@ import SignInPage from './src/pages/SignIn.page';
 import SignUpPage from './src/pages/SignUp.page';
 import { useAppDispatch } from './src/store';
 import { RootState } from './src/store/reducers';
+import { orderSlice } from './src/store/slices';
 import { userSlice } from './src/store/slices/user.slice';
 
 const Tab = createBottomTabNavigator<LoggedInParamList>();
@@ -45,8 +46,53 @@ const AppInner = () => {
 
   const [socket, disconnect] = useSocket();
 
-  const logCallback = useCallback((data: any) => {
-    console.log(data);
+  const setOrder = useCallback(
+    (data: any) => {
+      console.log(data);
+      dispatch(orderSlice.actions.addOrder(data));
+    },
+    [dispatch],
+  );
+
+  useEffect(() => {
+    axios.interceptors.response.use(
+      response => response,
+      async error => {
+        if (axios.isAxiosError(error)) {
+          if (error.config?.url === `${CONFIG.API_URL}/refreshToken`) {
+            return Promise.reject(error);
+          }
+
+          if (error.status === 419) {
+            if (error.response?.data.code === 'expired') {
+              const refreshToken = await EncryptedStorage.getItem(
+                'refreshToken',
+              );
+
+              const response = await axios.post(
+                `${CONFIG.API_URL}/refreshToken`,
+                {},
+                {
+                  headers: {
+                    Authorization: `Bearer ${refreshToken}`,
+                  },
+                },
+              );
+
+              const accessToken = response.data.data.accessToken;
+              dispatch(userSlice.actions.setAccessToken(accessToken));
+
+              const originalRequest = error.config;
+              originalRequest!.headers.Authorization = `Bearer ${accessToken}`;
+
+              return axios(originalRequest!);
+            }
+          }
+        }
+
+        return Promise.reject(error);
+      },
+    );
   }, []);
 
   useEffect(() => {
@@ -60,7 +106,7 @@ const AppInner = () => {
         }
 
         const { data } = await axios.post(
-          `${Config.API_URL}/refreshToken`,
+          `${CONFIG.API_URL}/refreshToken`,
           {},
           {
             headers: {
@@ -88,14 +134,14 @@ const AppInner = () => {
     if (socket && isLoggedIn) {
       console.log('socket start');
       socket.emit('acceptOrder', 'hello');
-      socket.on('order', logCallback);
+      socket.on('order', setOrder);
     }
     return () => {
       if (socket) {
-        socket.off('hello', logCallback);
+        socket.off('hello', setOrder);
       }
     };
-  }, [disconnect, socket, logCallback, isLoggedIn]);
+  }, [disconnect, socket, setOrder, isLoggedIn]);
 
   useEffect(() => {
     if (!isLoggedIn) {

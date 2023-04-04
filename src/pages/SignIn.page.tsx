@@ -12,8 +12,8 @@ import {
 import { RootStackParamList } from '../../App';
 
 import axios, { AxiosError } from 'axios';
-import Config from 'react-native-config';
 import EncryptedStorage from 'react-native-encrypted-storage';
+import { CONFIG } from '../feature/common/config';
 import { DismissKeyBoardView } from '../feature/ui/dismiss-keyboard';
 import { useInput } from '../feature/ui/hooks';
 import { TextField } from '../feature/ui/text-field';
@@ -40,7 +40,7 @@ const SignInPage = ({
     if (loading) return;
     try {
       setLoading(true);
-      const response = await axios.post(`${Config.API_URL}/login`, {
+      const response = await axios.post(`${CONFIG.API_URL}/login`, {
         email,
         password,
       });
