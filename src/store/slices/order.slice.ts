@@ -11,11 +11,11 @@ export interface Order {
   price: number;
 }
 
-interface InitialState {
+interface OrderState {
   orders: Order[];
   deliveries: Order[];
 }
-const initialState: InitialState = {
+const initialState: OrderState = {
   orders: [],
   deliveries: [],
 };
