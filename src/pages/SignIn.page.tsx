@@ -1,5 +1,5 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -11,26 +11,64 @@ import {
 } from 'react-native';
 import { RootStackParamList } from '../../App';
 
+import axios, { AxiosError } from 'axios';
+import EncryptedStorage from 'react-native-encrypted-storage';
+import { CONFIG } from '../feature/common/config';
 import { DismissKeyBoardView } from '../feature/ui/dismiss-keyboard';
 import { useInput } from '../feature/ui/hooks';
 import { TextField } from '../feature/ui/text-field';
+import { useAppDispatch } from '../store';
+import { userSlice } from '../store/slices/user.slice';
 
 const SignInPage = ({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'SignIn'>) => {
-  const [id, setId] = useInput('');
-  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useInput('');
+  const [password, setPassword] = useInput('');
   const emailRef = useRef<TextInput | null>(null);
   const passwordRef = useRef<TextInput | null>(null);
 
-  const isValidEamil = id && id.trim() !== '';
+  const dispatch = useAppDispatch();
+
+  const isValidEmail = email && email.trim() !== '';
   const isValidPassword = password && password.trim() !== '';
 
-  const isValid = isValidEamil && isValidPassword;
+  const isValid = isValidEmail && isValidPassword;
 
-  const onSubmit = () => {
-    Alert.alert('로그인', '로그인성공');
-  };
+  const onSubmit = useCallback(async () => {
+    if (loading) return;
+    try {
+      setLoading(true);
+      const response = await axios.post(`${CONFIG.API_URL}/login`, {
+        email,
+        password,
+      });
+
+      const {
+        name,
+        email: resEmail,
+        accessToken,
+        refreshToken,
+      } = response.data.data;
+      setLoading(false);
+
+      dispatch(
+        userSlice.actions.setUser({
+          name,
+          email: resEmail,
+          accessToken,
+        }),
+      );
+
+      await EncryptedStorage.setItem('refreshToken', refreshToken);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        Alert.alert('로그인', error.response?.data.message ?? '알수없는 에러');
+      }
+      setLoading(false);
+    }
+  }, [email, password, loading, dispatch]);
 
   const goToSignUp = () => {
     navigation.navigate('SignUp');
@@ -42,10 +80,11 @@ const SignInPage = ({
         <View style={styles.form}>
           <TextField
             ref={emailRef}
+            autoCapitalize="none"
             placeholder="아이디를 입력하세요"
             label="아이디"
-            value={id}
-            onChangeText={setId}
+            value={email}
+            onChangeText={setEmail}
             importantForAutofill="yes"
             textContentType="emailAddress"
             returnKeyType="next"
@@ -55,6 +94,7 @@ const SignInPage = ({
           />
           <TextField
             label="비밀번호"
+            autoCapitalize="none"
             ref={passwordRef}
             secureTextEntry
             placeholder="비밀번호를 입력하세요"
